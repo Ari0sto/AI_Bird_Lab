@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#102b2c" />
+    <title>AI Bird Lab — распознавание птиц</title>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="brand"><div class="brand-icon">✦</div><div><strong>AI Bird Lab</strong><small>Wildlife Intelligence</small></div></div>
+        <p class="nav-caption">РАБОЧАЯ ОБЛАСТЬ</p>
+        <nav aria-label="Основная навигация">
+          <button class="nav-button active" data-tab="photo">01 <span>Фотоанализ</span></button>
+          <button class="nav-button" data-tab="audio">02 <span>Аудиоанализ</span></button>
+          <button class="nav-button" data-tab="history">03 <span>История</span></button>
+          <button class="nav-button" data-tab="stats">04 <span>Статистика</span></button>
+        </nav>
+        <div class="sidebar-bottom"><span class="dot"></span> Локальная система · v1.0</div>
+      </aside>
+      <main class="main">
+        <header class="topbar"><span>RESEARCH / BIRD IDENTIFICATION</span><span>TRANSFORMERS + FASTAPI</span></header>
+        <section id="photo" class="page active" aria-labelledby="photo-title">
+          <div class="heading"><span class="eyebrow">01 / COMPUTER VISION</span><h1 id="photo-title">Фотоанализ птиц</h1><p>Загрузите фотографию для определения вида и получения научной справки.</p></div>
+          <div class="workspace">
+            <div class="panel"><h2>Входные данные</h2><p class="muted">JPG или PNG · до 12 МБ</p>
+              <label class="upload-zone" for="image-file"><span class="upload-symbol">↥</span><strong>Выберите фотографию</strong><small>Нажмите для выбора файла</small></label>
+              <input id="image-file" type="file" accept="image/jpeg,image/png" hidden />
+              <div id="image-preview" class="preview"></div>
+              <button id="image-run" class="primary" disabled>Распознать птицу →</button>
+              <p id="image-status" class="status" role="status" aria-live="polite"></p>
+            </div>
+            <div class="panel results"><h2>Результат распознавания</h2><div id="image-results" class="empty">Здесь появятся три наиболее вероятных вида.</div></div>
+          </div>
+        </section>
+        <section id="audio" class="page" aria-labelledby="audio-title">
+          <div class="heading"><span class="eyebrow">02 / BIOACOUSTICS</span><h1 id="audio-title">Аудиоанализ птиц</h1><p>Распознавание голосов птиц по записи с микрофона или диктофона.</p></div>
+          <div class="workspace">
+            <div class="panel"><h2>Входные данные</h2><p class="muted">WAV, MP3, M4A, OGG или FLAC · до 20 МБ</p>
+              <label class="upload-zone" for="audio-file"><span class="upload-symbol">♫</span><strong>Выберите аудиозапись</strong><small>Нажмите для выбора файла</small></label>
+              <input id="audio-file" type="file" accept=".wav,.mp3,.m4a,.ogg,.flac,audio/*" hidden />
+              <div id="audio-preview" class="preview"></div>
+              <button id="audio-run" class="primary" disabled>Анализировать аудио →</button>
+              <p id="audio-status" class="status" role="status" aria-live="polite"></p>
+            </div>
+            <div class="panel results"><h2>Результат распознавания</h2><div id="audio-results" class="empty">Здесь появятся три наиболее вероятных вида.</div></div>
+          </div>
+        </section>
+        <section id="history" class="page" aria-labelledby="history-title">
+          <div class="heading"><span class="eyebrow">03 / DATABASE</span><h1 id="history-title">История исследований</h1><p>История распознаваний хранится в локальной базе SQLite.</p></div>
+          <div class="panel"><div class="toolbar"><input id="history-search" type="search" placeholder="Поиск по названию вида..." aria-label="Поиск по названию вида" /><a class="secondary" href="/api/export" download="bird_analysis.csv">Экспорт CSV ↓</a></div><p id="history-status" class="status" role="status"></p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Файл</th><th>Вид птицы</th><th>Confidence</th><th>Дата</th><th></th></tr></thead><tbody id="history-body"></tbody></table></div></div>
+        </section>
+        <section id="stats" class="page" aria-labelledby="stats-title">
+          <div class="heading"><span class="eyebrow">04 / INSIGHTS</span><h1 id="stats-title">Статистика</h1><p>Сводка результатов локальных исследований.</p></div>
+          <div class="metrics"><div class="metric"><small>Всего анализов</small><strong id="stat-total">—</strong></div><div class="metric"><small>Макс. confidence</small><strong id="stat-max">—</strong></div><div class="metric"><small>Мин. confidence</small><strong id="stat-min">—</strong></div></div>
+          <div class="panel chart-panel"><h2>Частота встречаемости видов</h2><div class="chart-container"><canvas id="species-chart" role="img" aria-label="График распределения видов"></canvas></div><p id="stats-status" class="status" role="status"></p></div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
