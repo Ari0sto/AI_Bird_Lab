@@ -16,6 +16,13 @@
 - **CSV-экспорт:** сохранение истории в `bird_analysis.csv`.
 - **Web GUI:** интерфейс на TypeScript, HTML и CSS.
 
+## Внешний вид статистики
+<img width="1387" height="846" alt="Снимок экрана 2026-10-18 173742" src="https://github.com/user-attachments/assets/d547ed88-c1a0-4f7d-b276-78f7c0aaab5e" />
+<img width="1387" height="827" alt="Снимок экрана 2026-10-18 173818" src="https://github.com/user-attachments/assets/210f71e5-cf57-4e0e-b6f6-01f7295fdb25" />
+<img width="1385" height="802" alt="Снимок экрана 2026-10-18 173843" src="https://github.com/user-attachments/assets/7eaf388e-2087-4671-97a7-e6bab1d5da0d" />
+<img width="1400" height="787" alt="Снимок экрана 2026-10-18 173856" src="https://github.com/user-attachments/assets/3c6fa5e3-80cf-4114-8b06-b5c8b5683350" />
+<img width="1380" height="808" alt="Снимок экрана 2026-10-18 173910" src="https://github.com/user-attachments/assets/928624f3-bc38-4d2d-a226-c5068d2af673" />
+
 ## Технологии
 
 | Компонент | Технологии |
