@@ -5,6 +5,11 @@ __pycache__/
 .pytest_cache/
 *.egg-info/
 
+# C# / .NET
+bin/
+obj/
+.vs/
+
 # Environment
 .env
 .env.*
@@ -19,6 +24,8 @@ data/
 *.sqlite3
 *.sqlite
 *.db
+*.db-wal
+*.db-shm
 
 # Frontend
 frontend/node_modules/

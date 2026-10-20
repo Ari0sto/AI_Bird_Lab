@@ -1,24 +1,24 @@
 # AI Bird Lab
 
-**AI Bird Lab** — локальное веб-приложение для распознавания, классификации и анализа видов птиц по фотографиям и аудиозаписям с использованием моделей машинного обучения Hugging Face.
+**AI Bird Lab** is a local web application for recognizing, classifying, and analyzing bird species from photos and audio recordings using Hugging Face machine learning models.
 
-Приложение позволяет анализировать изображения и пение птиц, получать информацию о предполагаемых видах из Wikipedia и Wikidata, сохранять историю распознаваний, просматривать статистику и экспортировать результаты в CSV.
+The application allows you to analyze bird images and songs, retrieve information about predicted species from Wikipedia and Wikidata, save recognition history, view statistics, and export results to CSV.
 
-## Возможности
+## Features
 
-- **Фотоанализ:** распознавание птиц на изображениях JPG и PNG.
-- **Аудиоанализ:** классификация пения птиц из WAV, MP3, FLAC, OGG и M4A.
-- **AI-модели:** использование Hugging Face Transformers для локального инференса.
-- **Top-3 predictions:** три наиболее вероятных вида с оценками confidence.
-- **Информация о птицах:** научное название, семейство, ареал, питание и описание из Wikipedia/Wikidata.
-- **SQLite:** сохранение истории распознаваний с поиском и удалением записей.
-- **Статистика:** количество анализов, наиболее частые виды, максимальная и минимальная уверенность.
-- **CSV-экспорт:** сохранение истории в `bird_analysis.csv`.
-- **Web GUI:** интерфейс на TypeScript, HTML и CSS.
+- **Photo analysis:** bird recognition in JPG and PNG images.
+- **Audio analysis:** bird song classification from WAV, MP3, FLAC, OGG, and M4A files.
+- **AI models:** usage of Hugging Face Transformers for local inference.
+- **Top-3 predictions:** three most likely species with confidence scores.
+- **Bird information:** scientific name, family, habitat, diet, and description from Wikipedia/Wikidata.
+- **SQLite:** saving recognition history with search and delete capabilities.
+- **Statistics:** total number of analyses, most frequent species, maximum and minimum confidence.
+- **CSV export:** saving history to `bird_analysis.csv`.
+- **Web GUI:** interface built with TypeScript, HTML, and CSS.
 
-## Технологии
+## Technologies
 
-| Компонент | Технологии |
+| Component | Technology |
 |---|---|
 | Backend | Python, FastAPI |
 | Frontend | TypeScript, HTML, CSS, Vite |
@@ -31,22 +31,80 @@
 | Information API | Wikipedia, Wikidata |
 | Statistics | Chart.js |
 
-## Используемые AI-модели
+## Server Architecture
 
-**Распознавание фотографий:**
+AI Bird Lab is being extended into a multi-service architecture.
 
-- `facebook/detr-resnet-50` — обнаружение птиц на изображении.
-- `dima806/bird_species_image_detection` — классификация видов птиц на базе ViT.
+### Components
 
-**Распознавание аудио:**
+| Component | Technology | Status |
+|---|---|---|
+| Central Server | C# / ASP.NET Core (.NET 10) | Basic server implemented |
+| AI Server | Python / FastAPI | Operational |
+| Database | SQLite | Operational |
+| Web Application | TypeScript / Vite | Existing prototype |
+| Mobile Application | TBD | Planned |
 
-- `dima806/bird_sounds_classification` — классификация звуков птиц на базе Wav2Vec2.
+### Central Server
+The Central Server is developed using ASP.NET Core.
 
-Модели автоматически загружаются из Hugging Face при первом использовании и сохраняются в локальном кеше.
+**Current functionality:**
+- Independent application startup.
+- HTTP API available on port 5000.
+- Basic endpoint for verifying server operation.
 
-**Важно:** модели обучены на ограниченных наборах видов птиц. Результаты классификации могут быть неточными, особенно для видов, отсутствующих в обучающих данных.
+**Start:**
+```powershell
+cd central-server/BirdLab.CentralServer
+dotnet run --urls http://localhost:5000
+```
+**Test endpoint (default project template):**
+http://localhost:5000/weatherforecast
 
-## Структура проекта
+### AI Server
+The existing Python FastAPI backend serves as the AI Server.
+
+**Its functionality includes:**
+- Bird image classification.
+- Bird audio classification.
+- Information retrieval using Wikipedia and Wikidata.
+- SQLite storage of analysis results.
+
+The AI Server runs independently on port 8000.
+**API documentation:**
+http://localhost:8000/docs
+
+Use the existing backend startup instructions to launch the AI Server.
+
+### Database
+The project currently uses SQLite.
+The existing database and data storage remain managed by the Python backend. Migration to Microsoft SQL Server is not required.
+
+### Future Development
+Planned improvements include:
+- REST API communication between Central Server and AI Server.
+- Centralized request handling and business logic.
+- Database access architecture refinement.
+- Integration with Web and Mobile applications.
+
+*Note: Central Server and AI Server can currently be started independently. Communication between them has not yet been implemented.*
+
+## AI Models Used
+
+**Photo recognition:**
+
+- `facebook/detr-resnet-50` — bird detection in an image.
+- `dima806/bird_species_image_detection` — bird species classification based on ViT.
+
+**Audio recognition:**
+
+- `dima806/bird_sounds_classification` — bird sound classification based on Wav2Vec2.
+
+Models are automatically downloaded from Hugging Face upon first use and stored in a local cache.
+
+**Important:** models are trained on limited sets of bird species. Classification results may be inaccurate, especially for species not present in the training data.
+
+## Project Structure
 
 ```text
 AI_Bird_Lab/
@@ -87,90 +145,90 @@ AI_Bird_Lab/
 └── README.md
 ```
 
-Папки `tools/ffmpeg/` и `data/` являются локальными и не включаются в репозиторий GitHub. FFmpeg пользователь устанавливает самостоятельно, а база SQLite создаётся автоматически.
+The `tools/ffmpeg/` and `data/` folders are local and are not included in the GitHub repository. The user installs FFmpeg manually, and the SQLite database is created automatically.
 
-## Установка и запуск
+## Installation and Setup
 
-### 1. Системные требования
+### 1. System Requirements
 
-Рекомендуемая конфигурация:
+Recommended configuration:
 
 - Windows 10/11, 64-bit.
-- Python 3.11 или 3.12.
-- Node.js 20+ и npm.
-- FFmpeg для обработки аудиозаписей.
-- Интернет для первоначальной загрузки моделей и получения сведений из Wikipedia/Wikidata.
-- Несколько гигабайт свободного места для Python-зависимостей и AI-моделей.
+- Python 3.11 or 3.12.
+- Node.js 20+ and npm.
+- FFmpeg for audio processing.
+- Internet connection for initial model downloads and retrieving information from Wikipedia/Wikidata.
+- Several gigabytes of free space for Python dependencies and AI models.
 
-Приложение может работать на CPU. Видеокарта не является обязательным требованием, однако обработка на CPU может занимать больше времени.
+The application can run on CPU. A dedicated graphics card is not strictly required, though processing on a CPU may take longer.
 
-### 2. Скачивание проекта
+### 2. Downloading the Project
 
-Клонируйте репозиторий:
+Clone the repository:
 
 ```powershell
 git clone https://github.com/Ari0sto/AI_Bird_Lab.git
 cd AI_Bird_Lab
 ```
 
-Также можно скачать проект как ZIP-архив с GitHub и распаковать его.
+Alternatively, you can download the project as a ZIP archive from GitHub and extract it.
 
-### 3. Создание виртуального окружения Python
+### 3. Creating a Python Virtual Environment
 
-В корневой папке проекта выполните:
+In the project root folder, run:
 
 ```powershell
 python -m venv .venv
 ```
 
-Активируйте окружение:
+Activate the environment:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-Установите зависимости:
+Install dependencies:
 
 ```powershell
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Если PowerShell запрещает запуск скрипта активации, можно использовать Python непосредственно из виртуального окружения:
+If PowerShell restricts the execution of the activation script, you can use Python directly from the virtual environment:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-**Примечание:** при первой установке PyTorch и Transformers может потребоваться загрузка значительного объёма данных.
+**Note:** Initial installation of PyTorch and Transformers may require downloading a significant amount of data.
 
-### 4. Установка FFmpeg на Windows
+### 4. Installing FFmpeg on Windows
 
-FFmpeg необходим для обработки аудиофайлов. Он преобразует входящие записи в формат, совместимый с аудиомоделью: mono PCM WAV с частотой дискретизации 16 кГц.
+FFmpeg is required for processing audio files. It converts incoming recordings into a format compatible with the audio model: mono PCM WAV at a 16 kHz sample rate.
 
-В этом проекте FFmpeg рекомендуется устанавливать **локально в папку проекта**, без глобальной установки в Windows.
+For this project, it is recommended to install FFmpeg **locally within the project folder**, rather than globally on Windows.
 
-**Шаг 1. Скачать FFmpeg**
+**Step 1. Download FFmpeg**
 
-Перейдите на официальный сайт:
+Go to the official website:
 
 https://ffmpeg.org/download.html
 
-Выберите Windows и перейдите к сборкам от gyan.dev.
+Select Windows and proceed to the gyan.dev builds.
 
-Скачайте архив `ffmpeg-release-essentials.zip`.
+Download the `ffmpeg-release-essentials.zip` archive.
 
-**Шаг 2. Распаковать FFmpeg**
+**Step 2. Extract FFmpeg**
 
-Создайте внутри проекта каталог:
+Create a directory inside the project:
 
 ```text
 tools/ffmpeg/bin/
 ```
 
-Скопируйте в него исполняемые файлы из папки `bin` распакованного архива.
+Copy the executable files from the `bin` folder of the extracted archive into it.
 
-Итоговый путь должен выглядеть следующим образом:
+The final path should look like this:
 
 ```text
 AI_Bird_Lab/
@@ -182,59 +240,59 @@ AI_Bird_Lab/
             └── ffplay.exe
 ```
 
-**Шаг 3. Проверить FFmpeg**
+**Step 3. Verify FFmpeg**
 
-Откройте PowerShell в корневой папке проекта и выполните:
+Open PowerShell in the project root folder and run:
 
 ```powershell
 .\tools\ffmpeg\bin\ffmpeg.exe -version
 ```
 
-Если установка выполнена правильно, терминал покажет версию FFmpeg и информацию о сборке.
+If installed correctly, the terminal will display the FFmpeg version and build information.
 
-**Шаг 4. Добавить FFmpeg в PATH текущего терминала**
+**Step 4. Add FFmpeg to the current terminal's PATH**
 
-Перед запуском Backend выполните:
+Before starting the Backend, run:
 
 ```powershell
 $env:PATH = "$((Get-Location).Path)\tools\ffmpeg\bin;$env:PATH"
 ```
 
-Проверьте:
+Verify:
 
 ```powershell
 ffmpeg -version
 ```
 
-Если отображается версия FFmpeg, программа доступна для Python.
+If the FFmpeg version is displayed, the program is accessible to Python.
 
-**Важно:** эта команда изменяет `PATH` только в текущем терминале. После открытия нового терминала её необходимо выполнить повторно перед запуском Backend.
+**Important:** this command only changes the `PATH` in the current terminal. Once you open a new terminal, you must run it again before starting the Backend.
 
-Глобально устанавливать FFmpeg или изменять системные переменные Windows не требуется.
+A global installation of FFmpeg or modifying Windows system variables is not required.
 
-### 5. Запуск Backend
+### 5. Starting the Backend
 
-В первом терминале PowerShell откройте корневую папку проекта.
+In your first PowerShell terminal, open the project root folder.
 
-Активируйте виртуальное окружение:
+Activate the virtual environment:
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-Если FFmpeg установлен локально, добавьте его в `PATH`:
+If FFmpeg is installed locally, add it to the `PATH`:
 
 ```powershell
 $env:PATH = "$((Get-Location).Path)\tools\ffmpeg\bin;$env:PATH"
 ```
 
-Запустите FastAPI:
+Start FastAPI:
 
 ```powershell
 python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Backend будет доступен по адресу:
+The Backend will be available at:
 
 http://127.0.0.1:8000
 
@@ -242,11 +300,11 @@ Swagger API Documentation:
 
 http://127.0.0.1:8000/docs
 
-Проверка состояния сервера:
+Server health check:
 
 http://127.0.0.1:8000/api/health
 
-Ожидаемый ответ:
+Expected response:
 
 ```json
 {
@@ -254,124 +312,124 @@ http://127.0.0.1:8000/api/health
 }
 ```
 
-### 6. Запуск Frontend
+### 6. Starting the Frontend
 
-Откройте второй терминал PowerShell.
+Open a second PowerShell terminal.
 
-Перейдите в папку `frontend`:
+Navigate to the `frontend` folder:
 
 ```powershell
 cd frontend
 ```
 
-Установите зависимости:
+Install dependencies:
 
 ```powershell
 npm install
 ```
 
-Запустите Vite:
+Start Vite:
 
 ```powershell
 npm run dev
 ```
 
-Приложение будет доступно по адресу:
+The application will be available at:
 
 http://127.0.0.1:5173
 
-Backend и Frontend должны работать одновременно в разных терминалах.
+The Backend and Frontend must run simultaneously in different terminals.
 
-Для проверки production-сборки frontend выполните:
+To verify the production build of the frontend, run:
 
 ```powershell
 npm run build
 ```
 
-Результат сборки появится в `frontend/dist`. В текущей конфигурации FastAPI не обслуживает этот каталог напрямую.
+The build result will appear in `frontend/dist`. In the current configuration, FastAPI does not serve this directory directly.
 
-## Использование приложения
+## Usage
 
-### Фотоанализ
+### Photo Analysis
 
-1. Откройте вкладку фотоанализа.
-2. Загрузите фотографию птицы в JPG или PNG размером до 12 МБ.
-3. Запустите распознавание.
-4. Дождитесь обработки изображения.
-5. Просмотрите три наиболее вероятных вида и их confidence.
-6. Изучите информационную карточку предполагаемого вида.
+1. Open the photo analysis tab.
+2. Upload a bird photo in JPG or PNG format (up to 12 MB).
+3. Start the recognition process.
+4. Wait for the image to be processed.
+5. View the top three most likely species and their confidence scores.
+6. Explore the information card for the predicted species.
 
-Перед классификацией модель DETR проверяет наличие птицы на изображении. Если птица не обнаружена, приложение сообщает об этом.
+Before classification, the DETR model checks for the presence of a bird in the image. If no bird is detected, the application will notify you.
 
-### Аудиоанализ
+### Audio Analysis
 
-1. Откройте вкладку аудиоанализа.
-2. Загрузите WAV, MP3, FLAC, OGG или M4A размером до 20 МБ.
-3. Запустите распознавание.
-4. FFmpeg автоматически преобразует запись в требуемый формат.
-5. Аудиомодель проанализирует запись и выведет три наиболее вероятных вида.
+1. Open the audio analysis tab.
+2. Upload a WAV, MP3, FLAC, OGG, or M4A file (up to 20 MB).
+3. Start the recognition process.
+4. FFmpeg will automatically convert the recording to the required format.
+5. The audio model will analyze the recording and output the top three most likely species.
 
-Аудиоанализ использует фрагменты длительностью до 5 секунд из первых 60 секунд записи.
+Audio analysis uses segments up to 5 seconds long taken from the first 60 seconds of the recording.
 
-Качество результата зависит от громкости, шумов, длительности записи и набора видов, на которых обучалась модель.
+The quality of the result depends on the volume, background noise, length of the recording, and the specific set of species the model was trained on.
 
-### Информация о птицах
+### Bird Information
 
-После распознавания приложение обращается к Wikipedia и Wikidata.
+After recognition, the application queries Wikipedia and Wikidata.
 
-Информационная карточка может содержать:
+The information card may contain:
 
-- Научное название.
-- Семейство.
-- Ареал обитания или эндемичность.
-- Основной корм.
-- Краткое описание.
-- Ссылки на источники.
+- Scientific name.
+- Family.
+- Habitat or endemic status.
+- Main diet.
+- Brief description.
+- Links to sources.
 
-Если информация отсутствует или не может быть достоверно получена, соответствующее поле содержит:
+If information is missing or cannot be reliably obtained, the corresponding field displays:
 
-`Информация не найдена`
+`Information not found`
 
-Приложение не генерирует биологические факты самостоятельно.
+The application does not generate biological facts on its own.
 
-Для HTTP-запросов к Wikimedia используется идентифицируемый `User-Agent`. При самостоятельном развёртывании необходимо указать действительный контакт.
+An identifiable `User-Agent` is used for HTTP requests to Wikimedia. If deploying the app independently, you must provide valid contact details.
 
-### История распознаваний
+### Recognition History
 
-Результаты успешных анализов сохраняются в локальной базе данных SQLite:
+Results of successful analyses are saved in a local SQLite database:
 
 ```text
 data/birds.sqlite3
 ```
 
-Доступные возможности:
+Available features:
 
-- Просмотр истории распознаваний.
-- Поиск по названию птицы.
-- Удаление записей.
-- Сохранение результата после перезапуска приложения.
+- View recognition history.
+- Search by bird name.
+- Delete records.
+- Results are saved persistently across application restarts.
 
-Сами исходные фотографии и аудиозаписи в базе не сохраняются.
+The original photos and audio recordings are not saved in the database.
 
-### Статистика
+### Statistics
 
-В приложении доступна статистическая панель со следующими показателями:
+A statistics dashboard is available in the application, featuring:
 
-- Общее количество распознаваний.
-- Наиболее часто определяемые виды.
-- Максимальная confidence.
-- Минимальная confidence.
-- График распределения видов.
+- Total number of recognitions.
+- Most frequently identified species.
+- Maximum confidence score.
+- Minimum confidence score.
+- Species distribution chart.
 
-Визуализация реализована через Chart.js.
+Visualization is implemented using Chart.js.
 
-### Экспорт CSV
+### CSV Export
 
-Историю распознаваний можно экспортировать в файл:
+The recognition history can be exported to a file:
 
 `bird_analysis.csv`
 
-CSV содержит поля:
+The CSV contains the following fields:
 
 ```text
 image_name
@@ -381,88 +439,88 @@ analysis_date
 description
 ```
 
-Файл использует кодировку UTF-8 с BOM для совместимости с Excel.
+The file uses UTF-8 encoding with a BOM for compatibility with Excel.
 
 ## REST API
 
-| Метод | Endpoint | Назначение |
+| Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/api/health` | Проверка сервера |
-| POST | `/api/analyze/image` | Анализ фотографии |
-| POST | `/api/analyze/audio` | Анализ аудиозаписи |
-| GET | `/api/history` | Получение истории |
-| DELETE | `/api/history/{id}` | Удаление записи |
-| GET | `/api/stats` | Статистика |
-| GET | `/api/export` | Экспорт CSV |
+| GET | `/api/health` | Server health check |
+| POST | `/api/analyze/image` | Photo analysis |
+| POST | `/api/analyze/audio` | Audio analysis |
+| GET | `/api/history` | Retrieve history |
+| DELETE | `/api/history/{id}` | Delete a record |
+| GET | `/api/stats` | Retrieve statistics |
+| GET | `/api/export` | Export to CSV |
 
-Интерактивная документация API доступна по адресу:
+Interactive API documentation is available at:
 
 http://127.0.0.1:8000/docs
 
-## Ограничения
+## Limitations
 
-**Точность распознавания**
+**Recognition Accuracy**
 
-AI-модели не гарантируют правильное определение вида. Высокая confidence не является доказательством правильности классификации.
+AI models do not guarantee correct species identification. High confidence is not proof of an accurate classification.
 
-**Ограниченный набор видов**
+**Limited Set of Species**
 
-Фото- и аудиомодели обучены на определённых наборах данных. Некоторые распространённые виды могут распознаваться неправильно или отсутствовать среди поддерживаемых классов.
+Photo and audio models are trained on specific datasets. Some common species may be misidentified or absent from the supported classes.
 
-Аудиомодель классифицирует 50 видов птиц и не предназначена для универсального распознавания всех птиц мира.
+The audio model classifies 50 bird species and is not designed for the universal recognition of all bird species worldwide.
 
-**Низкая уверенность**
+**Low Confidence**
 
-Если все значения confidence низкие, результат следует рассматривать как предположение, а не достоверную идентификацию.
+If all confidence values are low, the result should be treated as a guess rather than a reliable identification.
 
-**Доступность внешних API**
+**External API Availability**
 
-Wikipedia и Wikidata требуют подключения к интернету. При сетевых ошибках отдельные информационные поля могут оставаться незаполненными.
+Wikipedia and Wikidata require an internet connection. In the event of network errors, certain information fields may remain empty.
 
-**Неполные сведения**
+**Incomplete Data**
 
-Не все виды имеют полный набор структурированных данных в Wikidata. Например, семейство может быть известно, а информация о питании — отсутствовать.
+Not all species have a complete set of structured data in Wikidata. For example, the family might be known, while diet information is missing.
 
-**Производительность**
+**Performance**
 
-Первая обработка может занимать значительное время из-за загрузки весов моделей. Последующие операции используют локальный кеш.
+Initial processing may take a significant amount of time due to model weight loading. Subsequent operations use a local cache.
 
-## Обработка ошибок
+## Error Handling
 
-В приложении предусмотрена обработка основных ошибок:
+The application includes error handling for common issues:
 
-- Повреждённые изображения и аудиофайлы.
-- Неподдерживаемые форматы.
-- Отсутствие обнаруженной птицы на фотографии.
-- Слишком короткое или бесшумное аудио.
-- Отсутствие FFmpeg.
-- Недоступность Hugging Face при загрузке моделей.
-- Ошибки Wikipedia и Wikidata.
-- Недоступность Backend.
-- Неверные пользовательские данные.
+- Corrupted image and audio files.
+- Unsupported formats.
+- No bird detected in the photo.
+- Audio is too short or silent.
+- Missing FFmpeg installation.
+- Hugging Face unavailability during model downloads.
+- Wikipedia and Wikidata errors.
+- Backend unavailability.
+- Invalid user input.
 
-Ошибки внешних информационных сервисов не должны приводить к потере успешно полученного результата классификации.
+Errors from external information services do not lead to the loss of a successfully obtained classification result.
 
-## Тестирование
+## Testing
 
-Для запуска автоматических тестов Backend из корня проекта:
+To run automated Backend tests from the project root:
 
 ```powershell
 python -m unittest discover -s tests -v
 ```
 
-Автотесты используют имитации вызовов моделей и внешних API. Они проверяют прикладную логику, но не оценивают качество распознавания реальных фотографий и аудиозаписей.
+Automated tests use mocked calls to models and external APIs. They verify application logic but do not evaluate the actual recognition quality of real photos or audio recordings.
 
-Для проверки Frontend:
+To verify the Frontend:
 
 ```powershell
 cd frontend
 npm run build
 ```
 
-Рекомендуется дополнительно выполнить ручное тестирование распознавания, истории, статистики и CSV-экспорта.
+It is recommended to additionally perform manual testing for recognition, history, statistics, and CSV export functionality.
 
-## Источники
+## Sources
 
 - Hugging Face Transformers: https://huggingface.co/docs/transformers
 - Hugging Face Bird Image Model: https://huggingface.co/dima806/bird_species_image_detection
@@ -473,8 +531,8 @@ npm run build
 - Wikidata API: https://www.wikidata.org/wiki/Wikidata:Data_access
 - Chart.js: https://www.chartjs.org/
 
-## Назначение проекта
+## Project Purpose
 
-AI Bird Lab — учебный и портфолио-проект, демонстрирующий интеграцию компьютерного зрения, обработки аудио, предобученных AI-моделей, внешних информационных API, базы данных SQLite и веб-интерфейса.
+AI Bird Lab is an educational and portfolio project demonstrating the integration of computer vision, audio processing, pre-trained AI models, external information APIs, an SQLite database, and a web interface.
 
-Приложение не предназначено для научной идентификации птиц без дополнительной экспертной проверки результатов.
+The application is not intended for the scientific identification of birds without further expert verification of the results.

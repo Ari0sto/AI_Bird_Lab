@@ -1,0 +1,6 @@
+@BirdLab.CentralServer_HostAddress = http://localhost:5137
+
+GET {{BirdLab.CentralServer_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
