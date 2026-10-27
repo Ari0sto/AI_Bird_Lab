@@ -1,0 +1,31 @@
+services:
+  ai-server:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      HF_HOME: /app/model_cache
+    volumes:
+      - birdlab_data:/app/data
+      - birdlab_models:/app/model_cache
+    expose:
+      - "8000"
+
+  central-server:
+    build:
+      context: .
+      dockerfile: central-server/BirdLab.CentralServer/Dockerfile
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      AI_SERVER_URL: http://ai-server:8000
+      AUTH_DB_PATH: /app/auth-data/auth.db
+    volumes:
+      - birdlab_auth:/app/auth-data
+    depends_on:
+      - ai-server
+
+volumes:
+  birdlab_data:
+  birdlab_models:
+  birdlab_auth:

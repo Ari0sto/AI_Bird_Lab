@@ -37,3 +37,7 @@ tools/ffmpeg/
 # Temporary files
 *.log
 .DS_Store
+
+# AI models and cache
+.cache/
+model_cache/

@@ -29,11 +29,32 @@ def init_db() -> None:
                 confidence REAL NOT NULL,
                 analysis_date TEXT NOT NULL,
                 description TEXT NOT NULL,
-                media_type TEXT NOT NULL CHECK (media_type IN ('image', 'audio'))
+                media_type TEXT NOT NULL CHECK (media_type IN ('image', 'audio')),
+                user_id TEXT
             )
         """)
-        db.execute("CREATE INDEX IF NOT EXISTS idx_species ON analyses(predicted_species)")
 
+        # Check existing columns
+        columns = db.execute("PRAGMA table_info(analyses)").fetchall()
+        column_names = [column["name"] for column in columns]
+
+        # Add user_id to existing database
+        if "user_id" not in column_names:
+            db.execute("""
+                ALTER TABLE analyses
+                ADD COLUMN user_id TEXT
+            """)
+
+        # Indexes
+        db.execute("""
+            CREATE INDEX IF NOT EXISTS idx_species
+            ON analyses(predicted_species)
+        """)
+
+        db.execute("""
+            CREATE INDEX IF NOT EXISTS idx_user_id
+            ON analyses(user_id)
+        """)
 
 def add_analysis(filename: str, species: str, score: float,
                  description: str, media_type: str) -> int:
