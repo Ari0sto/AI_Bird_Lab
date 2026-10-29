@@ -7,7 +7,49 @@
     <title>AI Bird Lab — распознавание птиц</title>
   </head>
   <body>
-    <div class="layout">
+    <div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div class="brand">
+      <div class="brand-icon">✦</div>
+      <div>
+        <strong>AI Bird Lab</strong>
+        <small>Wildlife Intelligence</small>
+      </div>
+    </div>
+
+    <h1 id="auth-title">Вход в систему</h1>
+    <p class="muted">Авторизуйтесь для работы с AI Bird Lab.</p>
+
+    <form id="auth-form">
+      <label for="auth-email">Email</label>
+      <input
+        id="auth-email"
+        type="email"
+        autocomplete="email"
+        required
+      />
+
+      <label for="auth-password">Пароль</label>
+      <input
+        id="auth-password"
+        type="password"
+        autocomplete="current-password"
+        required
+      />
+
+      <button id="auth-submit" class="primary" type="submit">
+        Войти
+      </button>
+    </form>
+
+    <p id="auth-status" class="status" role="status"></p>
+
+    <button id="auth-switch" class="auth-switch" type="button">
+      Нет аккаунта? Зарегистрироваться
+    </button>
+  </div>
+</div>
+    <div id="app-layout" class="layout" hidden>
       <aside class="sidebar">
         <div class="brand"><div class="brand-icon">✦</div><div><strong>AI Bird Lab</strong><small>Wildlife Intelligence</small></div></div>
         <p class="nav-caption">РАБОЧАЯ ОБЛАСТЬ</p>
@@ -17,7 +59,14 @@
           <button class="nav-button" data-tab="history">03 <span>История</span></button>
           <button class="nav-button" data-tab="stats">04 <span>Статистика</span></button>
         </nav>
-        <div class="sidebar-bottom"><span class="dot"></span> Локальная система · v1.0</div>
+        <div class="sidebar-bottom">
+          <button id="logout-button" class="auth-switch" type="button">
+                Выйти из аккаунта
+          </button>
+        <div>
+    <span class="dot"></span> Локальная система · v1.0
+  </div>
+</div>
       </aside>
       <main class="main">
         <header class="topbar"><span>RESEARCH / BIRD IDENTIFICATION</span><span>TRANSFORMERS + FASTAPI</span></header>
@@ -49,7 +98,7 @@
         </section>
         <section id="history" class="page" aria-labelledby="history-title">
           <div class="heading"><span class="eyebrow">03 / DATABASE</span><h1 id="history-title">История исследований</h1><p>История распознаваний хранится в локальной базе SQLite.</p></div>
-          <div class="panel"><div class="toolbar"><input id="history-search" type="search" placeholder="Поиск по названию вида..." aria-label="Поиск по названию вида" /><a class="secondary" href="/api/export" download="bird_analysis.csv">Экспорт CSV ↓</a></div><p id="history-status" class="status" role="status"></p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Файл</th><th>Вид птицы</th><th>Confidence</th><th>Дата</th><th></th></tr></thead><tbody id="history-body"></tbody></table></div></div>
+          <div class="panel"><div class="toolbar"><input id="history-search" type="search" placeholder="Поиск по названию вида..." aria-label="Поиск по названию вида" /><button id="export-button" class="secondary" type="button">Экспорт CSV ↓</button></div><p id="history-status" class="status" role="status"></p><div class="table-wrap"><table><thead><tr><th>ID</th><th>Файл</th><th>Вид птицы</th><th>Confidence</th><th>Дата</th><th></th></tr></thead><tbody id="history-body"></tbody></table></div></div>
         </section>
         <section id="stats" class="page" aria-labelledby="stats-title">
           <div class="heading"><span class="eyebrow">04 / INSIGHTS</span><h1 id="stats-title">Статистика</h1><p>Сводка результатов локальных исследований.</p></div>
