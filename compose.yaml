@@ -1,3 +1,4 @@
+
 services:
   ai-server:
     build:
@@ -11,6 +12,34 @@ services:
     expose:
       - "8000"
 
+  rabbitmq:
+    image: rabbitmq:4.2-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq-worker:
+    build:
+      context: .
+      dockerfile: backend/worker.Dockerfile
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
   central-server:
     build:
       context: .
@@ -20,12 +49,19 @@ services:
     environment:
       AI_SERVER_URL: http://ai-server:8000
       AUTH_DB_PATH: /app/auth-data/auth.db
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
     volumes:
       - birdlab_auth:/app/auth-data
     depends_on:
-      - ai-server
+      ai-server:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
 volumes:
   birdlab_data:
   birdlab_models:
   birdlab_auth:
+  rabbitmq_data:

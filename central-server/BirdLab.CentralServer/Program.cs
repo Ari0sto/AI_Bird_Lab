@@ -3,6 +3,9 @@ using BirdLab.CentralServer.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using RabbitMQ.Client;
+using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -356,4 +359,98 @@ app.MapGet("/api/ai/export", async (
 })
 .RequireAuthorization();
 
+
+// Send a demonstration message to RabbitMQ
+app.MapPost("/api/rabbitmq/send", async (
+    RabbitMessageRequest request) =>
+{
+    if (string.IsNullOrWhiteSpace(request.Message) ||
+        request.Message.Length > 500)
+    {
+        return Results.BadRequest(new
+        {
+            error = "Message must contain 1-500 characters."
+        });
+    }
+
+    const string queueName = "birdlab.demo";
+
+    var messageId = Guid.NewGuid().ToString();
+
+    var message = new
+    {
+        id = messageId,
+        text = request.Message.Trim(),
+        sentAtUtc = DateTimeOffset.UtcNow
+    };
+
+    var factory = new ConnectionFactory
+    {
+        HostName = builder.Configuration["RABBITMQ_HOST"]
+            ?? "localhost",
+        UserName = builder.Configuration["RABBITMQ_USER"]
+            ?? "guest",
+        Password = builder.Configuration["RABBITMQ_PASSWORD"]
+            ?? "guest"
+    };
+
+    try
+    {
+        await using var connection =
+            await factory.CreateConnectionAsync();
+
+        await using var channel =
+            await connection.CreateChannelAsync();
+
+        // Create the queue if it does not exist
+        await channel.QueueDeclareAsync(
+            queue: queueName,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null);
+
+        var body = Encoding.UTF8.GetBytes(
+            JsonSerializer.Serialize(message));
+
+        var properties = new BasicProperties
+        {
+            ContentType = "application/json",
+            DeliveryMode = DeliveryModes.Persistent,
+        };
+
+        await channel.BasicPublishAsync(
+            exchange: "",
+            routingKey: queueName,
+            mandatory: true,
+            basicProperties: properties,
+            body: body);
+
+        app.Logger.LogInformation(
+            "RabbitMQ message published: {MessageId}",
+            messageId);
+
+        return Results.Ok(new
+        {
+            status = "published",
+            id = messageId,
+            queue = queueName
+        });
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(
+            ex,
+            "Failed to publish RabbitMQ message");
+
+        return Results.Problem(
+            "Could not publish message to RabbitMQ.",
+            statusCode: 503);
+    }
+})
+.RequireAuthorization();
+
+
 app.Run();
+
+record RabbitMessageRequest(string Message);
