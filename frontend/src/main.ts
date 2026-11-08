@@ -1,6 +1,7 @@
 import Chart from 'chart.js/auto';
-import { fetchHistory, fetchStats, recognize, removeHistory, login, register, logout, exportCsv } from './api';
-import type { Analysis, HistoryItem, Statistics } from './api';
+import { fetchHistory, fetchStats, recognize, removeHistory, login, register, logout, exportCsv, fetchQuota, fetchWalletStatus, fetchWalletConfig, createWalletChallenge, verifyWalletSignature } from './api';
+import type { Analysis, HistoryItem, Statistics, WalletStatus } from './api';
+import { requestWalletAddress, signWalletMessage, purchaseSubscription } from './subscription';
 import './styles.css';
 
 function get<T extends Element>(selector: string): T {
@@ -86,6 +87,7 @@ authForm.addEventListener('submit', async (event) => {
 
     status('#auth-status', '');
     authPassword.value = '';
+    void refreshSubscriptionPanel();
 
   } catch (error) {
     status(
@@ -104,6 +106,113 @@ get<HTMLButtonElement>('#logout-button')
     logout();
     window.location.reload();
   });
+
+// --- Sepolia subscription and MetaMask ---
+let currentWallet: WalletStatus | null = null;
+let subscriptionBusy = false;
+
+const connectButton = get<HTMLButtonElement>('#wallet-connect');
+const payButton = get<HTMLButtonElement>('#subscription-buy');
+const refreshButton = get<HTMLButtonElement>('#subscription-refresh');
+
+function subscriptionMessage(message: string, isError = false): void {
+  const output = get<HTMLElement>('#subscription-status');
+  output.textContent = message;
+  output.classList.toggle('error', isError);
+}
+
+function setSubscriptionBusy(busy: boolean): void {
+  subscriptionBusy = busy;
+  connectButton.disabled = busy;
+  payButton.disabled = busy;
+  refreshButton.disabled = busy;
+}
+
+async function refreshSubscriptionPanel(): Promise<boolean> {
+  if (appLayout.hidden) return false;
+
+  try {
+    const [wallet, quota] = await Promise.all([fetchWalletStatus(), fetchQuota()]);
+    currentWallet = wallet;
+
+    get<HTMLElement>('#wallet-summary').textContent = wallet.linked && wallet.walletAddress
+      ? `Кошелёк: ${wallet.walletAddress.slice(0, 6)}…${wallet.walletAddress.slice(-4)}`
+      : 'Кошелёк не привязан';
+
+    get<HTMLElement>('#plan-summary').textContent = quota.subscriptionActive
+      ? 'Подписка активна'
+      : 'Бесплатный тариф';
+
+    get<HTMLElement>('#quota-summary').textContent = quota.subscriptionActive
+      ? `Без ограничений · использовано бесплатных: ${quota.usedAttempts}`
+      : `Осталось ${quota.remainingAttempts} из ${quota.freeLimit} бесплатных анализов`;
+
+    connectButton.hidden = wallet.linked;
+    payButton.hidden = !wallet.linked || quota.subscriptionActive;
+
+    if (!subscriptionBusy) subscriptionMessage('');
+    return true;
+  } catch (error) {
+    currentWallet = null;
+    payButton.hidden = true;
+    subscriptionMessage(
+      error instanceof Error ? error.message : 'Не удалось получить статус подписки.', true
+    );
+    return false;
+  }
+}
+
+connectButton.addEventListener('click', async () => {
+  if (subscriptionBusy) return;
+  setSubscriptionBusy(true);
+  subscriptionMessage('Подключение MetaMask…');
+  try {
+    const walletAddress = await requestWalletAddress();
+    const challenge = await createWalletChallenge(walletAddress);
+    subscriptionMessage('Подпишите сообщение для подтверждения владения кошельком. Это бесплатно.');
+    const signature = await signWalletMessage(challenge.message, walletAddress);
+    await verifyWalletSignature(walletAddress, challenge.nonce, signature);
+    const refreshed = await refreshSubscriptionPanel();
+    subscriptionMessage(refreshed
+      ? 'Кошелёк привязан. Теперь можно оформить подписку.'
+      : 'Кошелёк привязан, но проверка Sepolia временно недоступна.', !refreshed);
+  } catch (error) {
+    subscriptionMessage(error instanceof Error ? error.message : 'Ошибка привязки MetaMask.', true);
+  } finally {
+    setSubscriptionBusy(false);
+  }
+});
+
+payButton.addEventListener('click', async () => {
+  if (subscriptionBusy || !currentWallet?.linked || !currentWallet.walletAddress) return;
+  setSubscriptionBusy(true);
+  try {
+    const config = await fetchWalletConfig();
+    await purchaseSubscription(config, currentWallet.walletAddress, message => {
+      subscriptionMessage(message);
+    });
+    const refreshed = await refreshSubscriptionPanel();
+    if (refreshed && currentWallet?.subscriptionActive) {
+      subscriptionMessage('Транзакция подтверждена. Подписка активна.');
+    } else {
+      subscriptionMessage('Транзакция подтверждена, но статус ещё не обновился. Нажмите «Обновить статус».', true);
+    }
+  } catch (error) {
+    subscriptionMessage(error instanceof Error ? error.message : 'Ошибка оформления подписки.', true);
+  } finally {
+    setSubscriptionBusy(false);
+  }
+});
+
+refreshButton.addEventListener('click', async () => {
+  if (subscriptionBusy) return;
+  setSubscriptionBusy(true);
+  try {
+    await refreshSubscriptionPanel();
+  } finally {
+    setSubscriptionBusy(false);
+  }
+});
 
 // --- Navigation ---
 document.querySelectorAll<HTMLButtonElement>('.nav-button').forEach(button => {
@@ -248,6 +357,7 @@ function setupUploader(mode: 'image' | 'audio'): void {
       status(`#${mode}-status`, error instanceof Error ? error.message : 'Неизвестная ошибка.', true);
     } finally {
       button.disabled = false;
+      void refreshSubscriptionPanel();
     }
   });
 }

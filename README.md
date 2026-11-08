@@ -2,7 +2,9 @@
 
 AI Bird Lab is a local, AI-powered application for identifying bird species from **photos and audio recordings**. It uses Hugging Face models for recognition, retrieves additional species information from Wikipedia and Wikidata, and stores analysis results in SQLite.
 
-The project uses a multi-service architecture with a **Python AI Server**, a **C# Central Server**, a **TypeScript web frontend**, and **RabbitMQ** for demonstration of message exchange between C# and Python. Docker Compose runs the backend services.
+The project uses a multi-service architecture with a **Python AI Server**, a **C# Central Server**, a **TypeScript/Vite web app**, an **Expo/React Native mobile app**, and **RabbitMQ** for demonstration of message exchange between C# and Python. Docker Compose runs the backend services.
+
+A demonstration subscription system uses an Ethereum smart contract on the **Sepolia testnet**. Users can connect a MetaMask wallet and subscribe through the web app. The mobile app reads the same account-level subscription status from the Central Server; it does **not** initiate wallet connections or payments.
 
 ## Features
 
@@ -10,13 +12,18 @@ The project uses a multi-service architecture with a **Python AI Server**, a **C
 - Additional species information from Wikipedia and Wikidata, when available.
 - Analysis history, search, deletion, statistics, and CSV export.
 - Registration, login, and protected API access with ASP.NET Core Identity bearer tokens.
-- TypeScript/Vite web interface.
+- TypeScript/Vite web interface and Expo/React Native mobile app.
+- Free tier with **five analysis attempts per user**, shared between image and audio requests.
+- MetaMask wallet linking via signed challenge, and paid demonstration subscriptions on **Ethereum Sepolia**.
+- Unlimited image and audio analyses while a subscription is active.
+- Shared subscription status across the web and mobile apps when signed into the same account.
+- Mobile subscription/remaining-attempts status display; subscription purchase is available in the web app.
 - Docker Compose deployment of the backend services.
 - RabbitMQ message publishing from C# and consumption by a separate Python worker.
 
 ## Screenshots
 
-The following screenshots show the AI Bird Lab web interface, including analysis, history, and statistics views.
+The following screenshots show the AI Bird Lab web interface, including analysis, history, and statistics views. Subscription and mobile screenshots can be added separately.
 
 ![AI Bird Lab interface — screenshot 1](https://github.com/user-attachments/assets/d547ed88-c1a0-4f7d-b276-78f7c0aaab5e)
 
@@ -32,26 +39,37 @@ The following screenshots show the AI Bird Lab web interface, including analysis
 
 | Component | Technology | Responsibility |
 |---|---|---|
-| Central Server | C# / ASP.NET Core (.NET 10) | Authentication, authorization, AI API proxy, and RabbitMQ publisher |
+| Central Server | C# / ASP.NET Core (.NET 10) | Authentication, per-user quotas, wallet linking, subscription checks, AI API proxy, and RabbitMQ publisher |
 | AI Server | Python / FastAPI | Image and audio recognition, species information, and analysis data |
-| Web frontend | TypeScript / Vite | User interface and API integration |
+| Web frontend | TypeScript / Vite | User interface, MetaMask wallet connection, subscription purchase, and AI API integration |
 | Message broker | RabbitMQ | Durable queue for demonstration messages |
 | Message consumer | Python / pika | Separate worker that receives and acknowledges messages |
 | AI database | SQLite | Analysis history and recognition results |
 | Authentication database | SQLite | User accounts and authentication data |
 | Containerization | Docker / Docker Compose | Backend service deployment |
-| Mobile application | Planned | Future mobile client |
+| Mobile application | Expo / React Native | Authentication, AI analysis, and account subscription/quota status |
+| Blockchain | Ethereum Sepolia / Solidity | Testnet subscription contract and on-chain membership checks |
 
 ### AI request flow
 
-1. The user interacts with the web frontend.
-2. The frontend sends HTTP requests to the Central Server.
+1. The user interacts with the web or mobile app.
+2. The client sends HTTP requests to the Central Server.
 3. The Central Server authenticates users and authorizes protected requests.
 4. AI-related requests are forwarded to the Python AI Server.
 5. The AI Server performs recognition and manages analysis data.
-6. Results are returned through the Central Server to the frontend.
+6. Results are returned through the Central Server to the requesting client.
 
-The frontend communicates with the Central Server using CORS-enabled HTTP requests. Authentication and analysis data are stored in separate SQLite databases. **Analysis history is not yet isolated per authenticated user.**
+The web frontend communicates with the Central Server using CORS-enabled HTTP requests. The mobile app calls the same API. Authentication and analysis data are stored in separate SQLite databases. **Analysis history is not yet isolated per authenticated user.**
+
+### Subscription and quota flow
+
+1. A registered user starts with **five free AI analyses** across photo and audio requests.
+2. In the **web app**, the user connects MetaMask and signs a server-issued challenge. Signature verification binds the wallet address to the authenticated account; signing does not spend ETH.
+3. The user purchases a subscription through the Solidity contract deployed on the **Sepolia testnet**, using **Sepolia test ETH**. The demonstrated subscription price is **0.001 Sepolia ETH** (check the deployed contract for its authoritative settings).
+4. The Central Server reads subscription status from the deployed contract. When active, the user can analyze images and audio without consuming free attempts.
+5. The **mobile app** uses the same Central Server and account, so a subscription purchased on the web also applies to mobile analysis. Mobile displays the status and free quota but does **not** contain a MetaMask payment flow.
+
+The Central Server, rather than either client, decides whether a request consumes a free attempt or is covered by an active subscription. Subscription checks require the configured Sepolia RPC endpoint to be reachable.
 
 ### RabbitMQ demonstration flow
 
@@ -73,6 +91,8 @@ AI_Bird_Lab/
 ├── central-server/
 │   └── BirdLab.CentralServer/     # ASP.NET Core Identity and API gateway
 ├── frontend/                      # TypeScript / Vite web app
+├── mobile/                        # Expo / React Native mobile app
+├── blockchain/                    # Solidity contract, Hardhat project, deployment artifacts
 ├── data/                          # Local AI history (ignored by Git)
 ├── tests/                         # Python backend tests
 ├── tools/ffmpeg/                  # Optional local FFmpeg binaries (ignored by Git)
@@ -89,7 +109,10 @@ Local databases, virtual environments, model caches, `.env`, and local FFmpeg bi
 For Docker-based execution:
 
 - Docker Desktop with Docker Compose.
-- Node.js 20+ and npm to run the web frontend locally.
+- Node.js 20+ and npm to run the web or mobile frontend locally.
+- Expo Go on a compatible physical device (or a configured Android emulator) for the mobile client.
+- MetaMask and **Sepolia test ETH** to demonstrate wallet linking and web subscriptions.
+- A Sepolia RPC endpoint and the address of the deployed subscription contract for blockchain features.
 - Internet access for the first AI model download and Wikipedia/Wikidata lookups.
 - Sufficient disk space for PyTorch and cached models.
 
@@ -105,7 +128,9 @@ For running the servers directly on Windows, also install Python 3.11–3.12, th
    Copy-Item .env.example .env
    ```
 
-   Edit `.env` and set `RABBITMQ_USER` and `RABBITMQ_PASSWORD`. Do not commit `.env`. These values are used by the RabbitMQ broker, Central Server, and Python worker. They are **not** AI Bird Lab user credentials.
+   Edit `.env` and set `RABBITMQ_USER` and `RABBITMQ_PASSWORD`. These values are used by the RabbitMQ broker, Central Server, and Python worker. They are **not** AI Bird Lab user credentials.
+
+   To enable Sepolia subscriptions, also configure `SEPOLIA_RPC_URL` and `BIRD_CONTRACT_ADDRESS` (the deployed contract address). Ensure `compose.yaml` passes both variables to the Central Server. Set these values to your **own deployment**; a fresh clone does not automatically create or deploy a contract. Never commit `.env`, RPC URLs with private API credentials, private keys, seed phrases, or wallet keystores.
 
 2. Start Docker Desktop, then run from the repository root:
 
@@ -143,6 +168,38 @@ docker compose down
 **Do not use `docker compose down -v` unless you intentionally want to delete the persisted Docker volumes**, including AI history, authentication data, and RabbitMQ data.
 
 **Note:** RabbitMQ stores its users in a persistent volume. Changing credentials in `.env` after the first initialization does not automatically update an existing RabbitMQ user. Update the existing credentials through RabbitMQ administration instead of deleting all volumes.
+
+### Run the mobile app (Expo)
+
+With Docker Compose running, launch the Expo app in another PowerShell terminal:
+
+```powershell
+cd mobile
+npm install
+npx expo start --tunnel --clear
+```
+
+Open the QR code in Expo Go. `--tunnel` provides access to the **Expo development server**, not to the backend API. The phone must also be able to reach the Central Server.
+
+For testing on a physical phone when local-network access to port 5000 is unavailable, start an **independent backend tunnel** in another terminal:
+
+```powershell
+ngrok http 5000
+```
+
+Set the mobile app's API base URL (for example, `EXPO_PUBLIC_API_URL`, where that setting is read by the project's API configuration) to the **current ngrok HTTPS forwarding URL**, then restart Expo:
+
+```dotenv
+EXPO_PUBLIC_API_URL=https://YOUR-NGROK-DOMAIN.ngrok-free.app
+```
+
+```powershell
+npx expo start --tunnel --clear
+```
+
+The backend tunnel's URL is a development setting, not a permanent production endpoint. Do not commit a temporary ngrok URL or expose a development server to untrusted users. If using a local network address instead, the phone and PC must be able to reach one another, and Docker's port binding/firewall settings must permit access.
+
+**Subscription behavior on mobile:** sign into the **same AI Bird Lab account** that purchased a subscription through the web app. Mobile displays the active subscription and provides unlimited analysis while the Central Server confirms it on Sepolia. Wallet pairing and subscription purchase are currently **web-only**.
 
 ### Option 2: Run the AI and Central Servers locally
 
@@ -187,7 +244,7 @@ dotnet run --urls http://localhost:5000
 - AI Server health proxy: `http://localhost:5000/api/ai/health`
 - Protected user endpoint: `http://localhost:5000/api/user/me`
 
-The Central Server creates its local SQLite authentication database as needed. **The RabbitMQ demo endpoint additionally requires a running broker and matching `RABBITMQ_HOST`, `RABBITMQ_USER`, and `RABBITMQ_PASSWORD` environment variables.** For the complete integration, use Docker Compose.
+The Central Server creates its local SQLite authentication database as needed. For local Sepolia subscription checks (outside Docker), set `SEPOLIA_RPC_URL` and `BIRD_CONTRACT_ADDRESS` in the Central Server process environment as well. **The RabbitMQ demo endpoint additionally requires a running broker and matching `RABBITMQ_HOST`, `RABBITMQ_USER`, and `RABBITMQ_PASSWORD` environment variables.** For the complete integration, use Docker Compose.
 
 #### 3. Web frontend
 
@@ -215,6 +272,10 @@ Base URL: `http://localhost:5000`
 | POST | `/api/auth/refresh` | Refresh an access token |
 | GET | `/api/user/me` | Authenticated user information |
 | GET | `/api/ai/health` | AI Server connectivity check |
+| GET | `/api/ai/quota` | Current free-analysis quota and subscription-aware access status |
+| POST | `/api/wallet/challenge` | Issue a wallet-signing challenge |
+| POST | `/api/wallet/verify` | Verify wallet signature and link wallet to account |
+| GET | `/api/wallet/status` | Linked-wallet and subscription status |
 | POST | `/api/ai/analyze/image` | Analyze a bird photograph |
 | POST | `/api/ai/analyze/audio` | Analyze a bird audio recording |
 | GET | `/api/ai/history` | Retrieve analysis history |
@@ -295,6 +356,10 @@ Models are downloaded and cached on first use.
 
 ### Limitations
 
+- Subscriptions are implemented on the **Sepolia testnet**, not Ethereum mainnet; Sepolia ETH has no real monetary value.
+- Wallet connection and subscription purchase are **web-only**; the mobile app displays subscription state and uses the account-level entitlement.
+- Blockchain subscription checks depend on availability of the configured Sepolia RPC service.
+
 - Recognition is limited to the species supported by the selected models; confidence does not guarantee accuracy.
 - Wikipedia and Wikidata information may be incomplete or unavailable.
 - Audio processing requires FFmpeg.
@@ -319,7 +384,7 @@ cd central-server/BirdLab.CentralServer
 dotnet build
 ```
 
-Verify the frontend build:
+Verify the web frontend build:
 
 ```powershell
 cd frontend
@@ -327,6 +392,16 @@ npm run build
 ```
 
 For integration testing, start Docker Compose, check both health endpoints, test authentication and AI analysis through the web frontend, and verify RabbitMQ publishing and consumption as described above. Unit tests using mocked model responses do not measure real-world recognition accuracy.
+
+For subscription and mobile integration, verify:
+
+1. A free account can analyze up to five images/audio recordings in total.
+2. A web user can connect MetaMask, sign the challenge, and purchase a **Sepolia** subscription.
+3. The server reports an active subscription and permits both photo and audio analysis without decrementing the free quota.
+4. The **same account** on Mobile App displays subscription status and can perform photo/audio analyses.
+5. A free account on Mobile App shows its remaining free attempts.
+
+The web payment flow and subscription-aware image/audio analysis have been manually exercised during development; the mobile client was also manually tested for status display and analysis. These checks are not a substitute for automated integration tests or production/security testing.
 
 ## Current status and future development
 
@@ -336,11 +411,14 @@ Implemented:
 - C# Central Server with ASP.NET Core Identity and an HTTP proxy to the AI Server.
 - Docker Compose deployment for the backend services.
 - Web frontend with authentication, image/audio analysis, history, statistics, and CSV export.
+- Expo/React Native mobile app with authentication, image/audio analysis, and subscription/quota status.
+- Five free analysis attempts per user and an account-level Sepolia subscription for unlimited analysis.
+- MetaMask wallet linking and testnet subscription payment through the web app.
 - RabbitMQ message broker, C# publisher endpoint, and Python consumer worker.
 
 Planned improvements:
 
-- Mobile application development.
+- Optional wallet connection and subscription payment directly inside the mobile app.
 - Per-user isolation of analysis history.
 - Improved session management and authentication UX.
 - HTTPS and production deployment hardening.
@@ -348,4 +426,4 @@ Planned improvements:
 
 ## Project scope
 
-AI Bird Lab is an educational and experimental software project focused on AI inference, backend integration, authentication, containerization, and multi-service architecture. It is intended for local development and demonstration rather than production deployment.
+AI Bird Lab is an educational and experimental software project focused on AI inference, backend integration, authentication, containerization, blockchain integration, and multi-service architecture. The payment mechanism uses **testnet funds only**. It is intended for local development and demonstration rather than production deployment.

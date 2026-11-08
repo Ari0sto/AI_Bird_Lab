@@ -41,3 +41,20 @@ tools/ffmpeg/
 # AI models and cache
 .cache/
 model_cache/
+
+# Mobile App / Expo
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+
+# Hardhat
+blockchain/node_modules/
+blockchain/cache/
+blockchain/artifacts/
+blockchain/coverage/
+blockchain/ignition/deployments/**/journal.json
+
+# Local secrets
+*.pem
+*.key

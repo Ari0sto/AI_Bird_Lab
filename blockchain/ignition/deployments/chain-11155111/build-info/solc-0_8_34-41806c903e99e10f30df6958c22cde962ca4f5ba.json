@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_34-41806c903e99e10f30df6958c22cde962ca4f5ba",
+  "solcVersion": "0.8.34",
+  "solcLongVersion": "0.8.34+commit.80d5c536",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.21.2"
+  },
+  "userSourceNameMap": {
+    "contracts/BirdSubscription.sol": "project/contracts/BirdSubscription.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "osaka",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/BirdSubscription.sol": {
+        "content": "\r\n// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.28;\r\n\r\ncontract BirdSubscription {\r\n\r\n    uint256 public constant SUBSCRIPTION_PRICE = 0.001 ether;\r\n    uint256 public constant SUBSCRIPTION_DURATION = 30 days;\r\n\r\n    address public immutable owner;\r\n\r\n    mapping(address => uint256) public subscriptionEnd;\r\n\r\n    event SubscriptionPurchased(\r\n        address indexed subscriber,\r\n        uint256 expirationDate\r\n    );\r\n\r\n    event FundsWithdrawn(\r\n        address indexed recipient,\r\n        uint256 amount\r\n    );\r\n\r\n    // Set the contract owner\r\n    constructor() {\r\n        owner = msg.sender;\r\n    }\r\n\r\n    // Purchase or renew a subscription\r\n    function subscribe() external payable {\r\n        require(\r\n            msg.value == SUBSCRIPTION_PRICE,\r\n            \"Incorrect payment amount\"\r\n        );\r\n\r\n        uint256 startDate = block.timestamp;\r\n\r\n        if (subscriptionEnd[msg.sender] > startDate) {\r\n            startDate = subscriptionEnd[msg.sender];\r\n        }\r\n\r\n        uint256 expirationDate = startDate + SUBSCRIPTION_DURATION;\r\n\r\n        subscriptionEnd[msg.sender] = expirationDate;\r\n\r\n        emit SubscriptionPurchased(msg.sender, expirationDate);\r\n    }\r\n\r\n    // Check whether a user has an active subscription\r\n    function isSubscribed(address user) external view returns (bool) {\r\n        return subscriptionEnd[user] > block.timestamp;\r\n    }\r\n\r\n    // Withdraw collected funds (owner only)\r\n    function withdraw() external {\r\n        require(msg.sender == owner, \"Only owner can withdraw\");\r\n\r\n        uint256 balance = address(this).balance;\r\n        require(balance > 0, \"No funds to withdraw\");\r\n\r\n        (bool success, ) = payable(owner).call{value: balance}(\"\");\r\n        require(success, \"Withdrawal failed\");\r\n\r\n        emit FundsWithdrawn(owner, balance);\r\n    }\r\n}\r\n"
+      }
+    }
+  }
+}

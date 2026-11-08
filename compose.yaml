@@ -52,6 +52,10 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+
+      # Ethereum Sepolia
+      SEPOLIA_RPC_URL: ${SEPOLIA_RPC_URL}
+      BIRD_CONTRACT_ADDRESS: ${BIRD_CONTRACT_ADDRESS}
     volumes:
       - birdlab_auth:/app/auth-data
     depends_on:

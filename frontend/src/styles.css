@@ -693,3 +693,60 @@ td:nth-child(2) {
 .auth-switch:hover {
   text-decoration: underline;
 }
+
+
+/* Sepolia subscription panel in the existing sidebar */
+.subscription-card {
+  margin: 25px 0 0;
+  padding: 17px 13px;
+  border: 1px solid rgba(114, 224, 173, .25);
+  border-radius: 15px;
+  background: #173839;
+  color: #e5f3ee;
+}
+.subscription-eyebrow {
+  color: #75dfb1;
+  font-size: 10px;
+  letter-spacing: 1.3px;
+  font-weight: 700;
+  margin-bottom: 11px;
+}
+.subscription-card > strong {
+  display: block;
+  font-size: 15px;
+  line-height: 1.35;
+}
+.subscription-detail, .subscription-address, .subscription-status {
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #a8c4ba;
+  margin: 9px 0;
+}
+.subscription-address { color: #d7ede4; }
+.subscription-action {
+  width: 100%;
+  border: 1px solid #69dca6;
+  background: #79e4b7;
+  color: #102b2c;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 9px;
+  margin-top: 9px;
+  padding: 11px 7px;
+}
+.subscription-pay { background: #88eabf; }
+.subscription-reload {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #a3d9c7;
+  font-size: 11px;
+  padding: 11px 0 2px;
+}
+.subscription-status { margin: 8px 0 0; }
+.subscription-status.error { color: #ffacac; }
+
+@media (max-width: 650px) {
+  .subscription-card { margin: 16px 0 0; }
+}

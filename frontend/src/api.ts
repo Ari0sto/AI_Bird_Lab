@@ -68,13 +68,24 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     let detail = `Ошибка сервера (${response.status}).`;
 
     try {
-      const json: { detail?: string | { msg: string }[] } =
-        await response.json();
+      const json: {
+        detail?: string | { msg: string }[];
+        message?: string;
+        error?: string;
+      } = await response.json();
 
-      if (typeof json.detail === 'string') {
+      if (json.error === 'FREE_LIMIT_REACHED') {
+        detail = 'Пять бесплатных анализов израсходованы. Оформите подписку в Sepolia.';
+      } else if (json.error === 'BLOCKCHAIN_UNAVAILABLE') {
+        detail = 'Sepolia RPC временно недоступен. Повторите запрос.';
+      } else if (typeof json.message === 'string') {
+        detail = json.message;
+      } else if (typeof json.detail === 'string') {
         detail = json.detail;
       } else if (Array.isArray(json.detail)) {
         detail = json.detail.map(x => x.msg).join('; ');
+      } else if (typeof json.error === 'string') {
+        detail = json.error;
       }
     } catch {
       // HTTP error without JSON
@@ -185,4 +196,67 @@ export async function exportCsv(): Promise<Blob> {
   }
 
   return response.blob();
+}
+
+// --- Subscription and wallet endpoints ---
+export type QuotaStatus = {
+  freeLimit: number;
+  usedAttempts: number;
+  remainingAttempts: number;
+  reservedAttempts: number;
+  subscriptionActive: boolean;
+};
+
+export type WalletStatus = {
+  linked: boolean;
+  walletAddress: string | null;
+  subscriptionActive: boolean;
+};
+
+export type WalletConfig = {
+  chainId: string;
+  contractAddress: string;
+  subscriptionPriceWei: string;
+};
+
+export type WalletChallenge = {
+  walletAddress: string;
+  nonce: string;
+  message: string;
+  expiresAt: string;
+};
+
+export function fetchQuota(): Promise<QuotaStatus> {
+  return request<QuotaStatus>('/api/ai/quota');
+}
+
+export function fetchWalletStatus(): Promise<WalletStatus> {
+  return request<WalletStatus>('/api/wallet/status');
+}
+
+export function fetchWalletConfig(): Promise<WalletConfig> {
+  return request<WalletConfig>('/api/wallet/config');
+}
+
+export function createWalletChallenge(walletAddress: string): Promise<WalletChallenge> {
+  return request<WalletChallenge>('/api/wallet/challenge', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ walletAddress }),
+  });
+}
+
+export function verifyWalletSignature(
+  walletAddress: string,
+  nonce: string,
+  signature: string
+): Promise<{ linked: boolean; walletAddress: string }> {
+  return request<{ linked: boolean; walletAddress: string }>(
+    '/api/wallet/verify',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletAddress, nonce, signature }),
+    }
+  );
 }

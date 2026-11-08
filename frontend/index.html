@@ -59,6 +59,16 @@
           <button class="nav-button" data-tab="history">03 <span>История</span></button>
           <button class="nav-button" data-tab="stats">04 <span>Статистика</span></button>
         </nav>
+        <section class="subscription-card" aria-label="Подписка Sepolia">
+          <div class="subscription-eyebrow">ПОДПИСКА / SEPOLIA</div>
+          <strong id="plan-summary">5 бесплатных анализов</strong>
+          <p id="quota-summary" class="subscription-detail">Выполните вход для проверки лимита.</p>
+          <p id="wallet-summary" class="subscription-address">Кошелёк не привязан</p>
+          <button id="wallet-connect" type="button" class="subscription-action">Привязать MetaMask</button>
+          <button id="subscription-buy" type="button" class="subscription-action subscription-pay" hidden>Подписка · 0.001 Sepolia ETH</button>
+          <button id="subscription-refresh" type="button" class="subscription-reload">Обновить статус</button>
+          <p id="subscription-status" class="subscription-status" role="status" aria-live="polite"></p>
+        </section>
         <div class="sidebar-bottom">
           <button id="logout-button" class="auth-switch" type="button">
                 Выйти из аккаунта
