@@ -378,7 +378,7 @@ The project includes automated tests for its five main components. All **298 tes
 |---|---|---:|---|
 | Python AI Server | `unittest` + Coverage.py | 113 | 100% statements, 99% combined with branches |
 | C# Central Server | xUnit + Coverlet | 49 | 52.17% raw Cobertura line rate; approximately 75.5% excluding generated OpenAPI code |
-| Solidity contracts | Hardhat | 22 | Not measured |
+| Solidity contracts | Hardhat | 22 | 100% |
 | Web frontend | Vitest + V8 Coverage | 40 | 86.56% lines; 80.24% branches |
 | Expo / React Native mobile | Jest + `jest-expo` | 74 | 58.66% lines; 38.87% branches |
 | **Total** | | **298** | Coverage is reported by component, not as a single project-wide percentage |
