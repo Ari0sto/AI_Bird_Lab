@@ -20,7 +20,7 @@ obj/
 .idea/
 
 # Database
-data/
+/data/
 *.sqlite3
 *.sqlite
 *.db
@@ -58,3 +58,18 @@ blockchain/ignition/deployments/**/journal.json
 # Local secrets
 *.pem
 *.key
+
+# Test results and coverage
+**/TestResults/
+**/coverage/
+.coverage
+htmlcov/
+*.trx
+*.coverage
+*.coveragexml
+**/.nyc_output/
+**/playwright-report/
+**/test-results/
+
+# Local temporary test artifacts
+*.tsbuildinfo

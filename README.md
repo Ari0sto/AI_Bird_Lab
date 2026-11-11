@@ -89,12 +89,13 @@ AI_Bird_Lab/
 │   ├── rabbitmq_worker.py         # RabbitMQ consumer
 │   └── worker.Dockerfile          # Lightweight worker image
 ├── central-server/
-│   └── BirdLab.CentralServer/     # ASP.NET Core Identity and API gateway
+│   ├── BirdLab.CentralServer/     # ASP.NET Core Identity and API gateway
+│   └── BirdLab.CentralServer.Tests/ # xUnit API, service and database tests
 ├── frontend/                      # TypeScript / Vite web app
 ├── mobile/                        # Expo / React Native mobile app
 ├── blockchain/                    # Solidity contract, Hardhat project, deployment artifacts
 ├── data/                          # Local AI history (ignored by Git)
-├── tests/                         # Python backend tests
+├── tests/                         # Python backend unit tests
 ├── tools/ffmpeg/                  # Optional local FFmpeg binaries (ignored by Git)
 ├── compose.yaml
 ├── .env.example                   # Example local configuration
@@ -371,25 +372,72 @@ Models are downloaded and cached on first use.
 
 ## Testing
 
-Run Python backend unit tests from the repository root:
+The project includes automated tests for its five main components. All **298 tests passed** in the latest local test runs.
+
+| Component | Test framework | Passing tests | Measured coverage |
+|---|---|---:|---|
+| Python AI Server | `unittest` + Coverage.py | 113 | 100% statements, 99% combined with branches |
+| C# Central Server | xUnit + Coverlet | 49 | 52.17% raw Cobertura line rate; approximately 75.5% excluding generated OpenAPI code |
+| Solidity contracts | Hardhat | 22 | Not measured |
+| Web frontend | Vitest + V8 Coverage | 40 | 86.56% lines; 80.24% branches |
+| Expo / React Native mobile | Jest + `jest-expo` | 74 | 58.66% lines; 38.87% branches |
+| **Total** | | **298** | Coverage is reported by component, not as a single project-wide percentage |
+
+Coverage values are from the final local runs. Automated tests use mocks for external services where appropriate; passing unit tests do not establish live RPC, model inference, or end-to-end service availability.
+
+### Run automated tests (PowerShell)
+
+Run these commands from the **repository root** (`AI_Bird_Lab`), using a separate terminal or returning to the root before each group.
+
+**Python AI Server:**
 
 ```powershell
-python -m unittest discover -s tests -v
+python -m pip install coverage
+python -m coverage run --branch --source=backend -m unittest discover -s tests -p "test_*.py"
+python -m coverage report -m
 ```
 
-Verify the Central Server build:
+**C# Central Server:**
 
 ```powershell
-cd central-server/BirdLab.CentralServer
-dotnet build
+cd central-server/BirdLab.CentralServer.Tests
+dotnet restore
+dotnet test --collect:"XPlat Code Coverage"
+cd ../..
 ```
 
-Verify the web frontend build:
+The Cobertura XML report is created under `central-server/BirdLab.CentralServer.Tests/TestResults/`. The raw report includes generated OpenAPI source; compare coverage of application code separately if reporting that adjusted figure.
+
+**Blockchain (Hardhat):**
+
+```powershell
+cd blockchain
+npm ci
+npx hardhat test
+cd ..
+```
+
+**Web frontend:**
 
 ```powershell
 cd frontend
-npm run build
+npm ci
+npm test -- --coverage
+cd ..
 ```
+
+**Mobile (Expo / Jest):**
+
+```powershell
+cd mobile
+npm ci
+npm test -- --coverage --collectCoverageFrom="src/**/*.{ts,tsx}"
+cd ..
+```
+
+`npm ci` assumes the corresponding `package-lock.json` is committed and in sync with `package.json`; otherwise run `npm install` locally, verify the lockfile, and commit it. Coverage output and other generated test artifacts are ignored by Git.
+
+### Manual integration checks
 
 For integration testing, start Docker Compose, check both health endpoints, test authentication and AI analysis through the web frontend, and verify RabbitMQ publishing and consumption as described above. Unit tests using mocked model responses do not measure real-world recognition accuracy.
 
